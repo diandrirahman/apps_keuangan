@@ -1,20 +1,41 @@
-export const invoiceExtractionPrompt = `Anda adalah ekstraktor data faktur Indonesia. Baca gambar faktur dengan teliti dan ambil hanya informasi yang benar-benar terlihat.
+export const invoiceExtractionPrompt = `Anda adalah ekstraktor data faktur Indonesia. Analisis tata letak dan arti teks, bukan sekadar posisi katanya.
 
-Aturan penting:
-- supplierName adalah nama usaha/toko/penerbit faktur, bukan nama pembeli, penerima, atau kasir.
-- Jangan pernah mengambil teks setelah "Hormat Kami", tanda tangan, atau nama orang pada bagian bawah faktur sebagai supplierName. Itu biasanya kasir/penjual.
-- Untuk nama toko, prioritaskan nama usaha pada cap/stempel, kop, atau identitas toko. Pada nota tulisan tangan, gunakan nama toko yang paling jelas sebagai identitas usaha; jangan gabungkan dengan nama orang.
-- invoiceNumber hanya boleh diisi jika ada nomor yang tertulis pada kolom/label seperti "Nota No.", "No. Faktur", atau "Invoice No.". Jika kolomnya kosong, kembalikan null—jangan gunakan tanggal, nomor urut lain, atau mengarang nomor.
-- invoiceDate harus tanggal faktur dalam format YYYY-MM-DD. Jika tahun atau tanggal tidak terbaca lengkap, gunakan null.
-- description adalah ringkasan barang yang dibeli, bukan nama pihak atau catatan lain.
-- total adalah nilai pada "Jumlah Rp", "Total", atau jumlah akhir; abaikan harga satuan. Tulis sebagai number bulat tanpa simbol mata uang dan tanpa pemisah ribuan.
+Kerjakan dalam urutan berikut:
+1. Transkripsikan semua teks yang benar-benar terlihat ke transcription.
+2. Kelompokkan identitas toko sebagai nama dan alamat.
+3. Ekstrak field faktur beserta kutipan bukti persis dari transcription.
+4. Berikan confidence dari 0 sampai 1. Jika bukti tidak cukup, gunakan null.
 
-Kembalikan JSON valid tanpa markdown dengan struktur berikut:
+Aturan identitas toko/supplier:
+- supplierName adalah nama usaha atau toko yang relevan untuk transaksi, bukan nama produk, alamat, pembeli, kasir, atau penandatangan.
+- Teks setelah "Hormat Kami", "Kasir", "Tanda Tangan", atau di area tanda tangan adalah nama kasir/penandatangan dan tidak boleh menjadi supplierName.
+- Nama barang pada tabel, termasuk jenis makanan atau produk, tidak boleh menjadi supplierName.
+- Baca baris yang berdekatan sebagai satu kelompok. Nama toko dapat berada pada baris pertama dan lokasi/alamat pada baris berikutnya.
+- Pada format dengan label bertumpuk "Tuan" dan "Toko", jika isinya berupa nama usaha lalu nama tempat, kelompokkan sebagai nama toko dan alamat. Contoh: "Salsabila" diikuti "Kubu Dalam" berarti supplierName "Salsabila" dan supplierAddress "Kubu Dalam".
+- Jangan membuat nama yang tidak muncul secara persis di transcription.
+
+Aturan field lain:
+- invoiceNumber hanya diisi jika ada nilai tertulis di dekat label "Nota No.", "No. Faktur", atau "Invoice No.". Jika kolomnya kosong, gunakan null.
+- invoiceDate harus berupa YYYY-MM-DD. Jika tanggal lengkap tidak terbaca, gunakan null.
+- description adalah ringkasan nama barang yang terlihat pada tabel.
+- total adalah nilai akhir di dekat "Jumlah Rp" atau "Total", berupa number bulat tanpa simbol mata uang dan pemisah ribuan.
+- evidence harus berupa kutipan persis yang ada dalam transcription. Jangan mengarang teks.
+
+Kembalikan JSON valid tanpa markdown dengan struktur persis berikut:
 {
+  "transcription": ["setiap baris teks yang terlihat"],
   "invoiceDate": "YYYY-MM-DD atau null",
-  "supplierName": "nama supplier atau null",
+  "invoiceDateEvidence": ["kutipan bukti"],
+  "supplierName": "nama toko atau null",
+  "supplierAddress": "alamat toko atau null",
+  "supplierEvidence": ["kutipan nama dan alamat"],
+  "supplierConfidence": 0.0,
   "invoiceNumber": "nomor faktur atau null",
-  "description": "deskripsi singkat transaksi atau null",
-  "total": "angka total tanpa simbol mata uang atau null"
+  "invoiceNumberEvidence": ["kutipan label dan nilainya"],
+  "description": "ringkasan barang atau null",
+  "descriptionEvidence": ["kutipan nama barang"],
+  "total": 0,
+  "totalEvidence": ["kutipan jumlah akhir"]
 }
-Jangan mengarang data. Jika tidak terbaca, gunakan null. Total harus berupa number.`
+
+Gunakan null untuk value yang tidak terbaca. Gunakan array kosong jika tidak ada evidence. Jangan keluarkan penjelasan selain JSON.`

@@ -12,7 +12,6 @@ export function formatInvoiceForExcel(invoice: InvoiceFormData): string {
     item.unit ?? '',
     item.unitPrice ?? '',
     item.lineTotal ?? '',
-    invoice.total ?? '',
   ].join('\t')).join('\n')
 }
 

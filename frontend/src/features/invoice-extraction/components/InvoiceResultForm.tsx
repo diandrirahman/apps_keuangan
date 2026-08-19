@@ -16,7 +16,6 @@ const fields = [
   ['supplierName', 'Nama Supplier', 'text'],
   ['supplierAddress', 'Alamat Toko', 'text'],
   ['invoiceNumber', 'Nomor Faktur', 'text'],
-  ['description', 'Keterangan', 'text'],
   ['total', 'Total', 'number'],
 ] as const
 
@@ -69,7 +68,7 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
             ? 'Tidak tercantum'
             : `${confidenceLabel(confidence)} · ${Math.round(confidence * 100)}%`
           return (
-            <label key={name} className={name === 'description' ? 'sm:col-span-2' : ''}>
+            <label key={name}>
               <span className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-700">
                 <span>{label}</span>
                 <span className={confidence < 0.7 ? 'text-amber-700' : 'text-slate-500'}>
@@ -105,8 +104,19 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
           <div className="mt-4 space-y-3">
             {itemFields.map((field, index) => {
               const extractedItem = initialValues.items[index]
+              const itemConfidence = extractedItem
+                ? Math.min(...Object.values(extractedItem.confidence))
+                : null
               return (
                 <div key={field.id} className="rounded-xl border border-slate-200 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-slate-700">Barang {index + 1}</p>
+                    <p className={`text-xs font-semibold ${itemConfidence !== null && itemConfidence < 0.7 ? 'text-amber-700' : 'text-slate-500'}`}>
+                      {itemConfidence === null
+                        ? 'Ditambahkan manual'
+                        : `Keyakinan AI: ${Math.round(itemConfidence * 100)}%`}
+                    </p>
+                  </div>
                   <div className="grid gap-3 sm:grid-cols-12">
                     <label className="sm:col-span-4">
                       <span className="text-xs font-semibold text-slate-600">Nama barang</span>

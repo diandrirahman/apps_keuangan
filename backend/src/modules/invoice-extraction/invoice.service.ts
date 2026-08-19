@@ -35,6 +35,59 @@ function hasEvidence(evidence: string[], transcription: string[]): boolean {
   return evidence.every((item) => normalizedTranscript.includes(normalizeEvidence(item)))
 }
 
+function validateItems(extracted: ReturnType<typeof invoiceAiResponseSchema.parse>, warnings: string[]) {
+  return extracted.items.flatMap((item, index) => {
+    const nameIsValid =
+      item.confidence.name >= MINIMUM_CONFIDENCE &&
+      hasTextEvidence(item.name, item.evidence.name, extracted.transcription)
+
+    if (!nameIsValid) {
+      warnings.push(`Nama barang pada baris ${index + 1} belum dapat dipastikan.`)
+      return []
+    }
+
+    const quantityIsValid = item.quantity !== null &&
+      item.confidence.quantity >= MINIMUM_CONFIDENCE &&
+      hasTextEvidence(String(item.quantity), item.evidence.quantity, extracted.transcription)
+    const unitIsValid = item.unit !== null &&
+      item.confidence.unit >= MINIMUM_CONFIDENCE &&
+      hasTextEvidence(item.unit, item.evidence.unit, extracted.transcription)
+    const unitPriceIsValid = item.unitPrice !== null &&
+      item.confidence.unitPrice >= MINIMUM_CONFIDENCE &&
+      hasTextEvidence(String(item.unitPrice), item.evidence.unitPrice, extracted.transcription)
+    const lineTotalIsValid = item.lineTotal !== null &&
+      item.confidence.lineTotal >= MINIMUM_CONFIDENCE &&
+      hasTextEvidence(String(item.lineTotal), item.evidence.lineTotal, extracted.transcription)
+
+    if (!quantityIsValid || !unitPriceIsValid || !lineTotalIsValid) {
+      warnings.push(`Jumlah atau harga barang pada baris ${index + 1} perlu diperiksa kembali.`)
+    }
+
+    const quantity = quantityIsValid ? item.quantity : null
+    const unitPrice = unitPriceIsValid ? item.unitPrice : null
+    const lineTotal = lineTotalIsValid ? item.lineTotal : null
+    const calculatedLineTotal = quantity !== null && unitPrice !== null ? quantity * unitPrice : null
+    const isCalculationValid = calculatedLineTotal !== null && lineTotal !== null
+      ? calculatedLineTotal === lineTotal
+      : null
+
+    if (isCalculationValid === false) {
+      warnings.push(`Perhitungan barang pada baris ${index + 1} tidak sesuai dengan jumlah tertulis.`)
+    }
+
+    return [{
+      name: item.name,
+      quantity,
+      unit: unitIsValid ? item.unit : null,
+      unitPrice,
+      lineTotal,
+      calculatedLineTotal,
+      isCalculationValid,
+      confidence: item.confidence,
+    }]
+  })
+}
+
 export class InvoiceService {
   constructor(private readonly geminiProvider = new GeminiProvider()) {}
 
@@ -88,11 +141,22 @@ export class InvoiceService {
       (invoiceNumberHasEvidence && extracted.confidence.invoiceNumber >= MINIMUM_CONFIDENCE)
 
     const warnings: string[] = []
+    const items = validateItems(extracted, warnings)
     if (!supplierIsValid) warnings.push('Nama supplier belum dapat dipastikan dari teks faktur.')
     if (extracted.invoiceDate !== null && !invoiceDateIsValid) warnings.push('Tanggal perlu diperiksa kembali.')
     if (!invoiceNumberIsValid) warnings.push('Nomor faktur perlu diperiksa kembali.')
-    if (!descriptionIsValid) warnings.push('Keterangan barang perlu diperiksa kembali.')
+    if (items.length === 0 && !descriptionIsValid) warnings.push('Keterangan barang perlu diperiksa kembali.')
     if (!totalIsValid) warnings.push('Total perlu diperiksa kembali.')
+
+    const itemLineTotals = items.map((item) => item.lineTotal)
+    const allItemsHaveLineTotal = items.length > 0 && itemLineTotals.every((value) => value !== null)
+    const calculatedItemsTotal = allItemsHaveLineTotal
+      ? itemLineTotals.reduce<number>((sum, value) => sum + (value ?? 0), 0)
+      : null
+
+    if (calculatedItemsTotal !== null && extracted.total !== null && calculatedItemsTotal !== extracted.total) {
+      warnings.push('Jumlah seluruh item berbeda dari total faktur. Periksa kemungkinan diskon, pajak, atau kesalahan hitung.')
+    }
 
     return invoiceSchema.parse({
       documentType: extracted.documentType,
@@ -100,7 +164,8 @@ export class InvoiceService {
       supplierName: supplierIsValid ? extracted.supplierName : null,
       supplierAddress: supplierAddressIsValid ? extracted.supplierAddress : null,
       invoiceNumber: invoiceNumberIsValid ? extracted.invoiceNumber : null,
-      description: descriptionIsValid ? extracted.description : null,
+      description: items.length > 0 ? items.map((item) => item.name).join(', ') : descriptionIsValid ? extracted.description : null,
+      items,
       total: totalIsValid ? extracted.total : null,
       confidence: extracted.confidence,
       reviewRequired: warnings.length > 0,

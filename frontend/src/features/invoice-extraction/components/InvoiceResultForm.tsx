@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { editableInvoiceSchema } from '../schemas/invoice.schema'
 import type { InvoiceExtractionResponse } from '../types/invoice.types'
@@ -28,7 +28,7 @@ function confidenceLabel(confidence: number): string {
 
 export function InvoiceResultForm({ initialValues, onReset }: Props) {
   const [copied, setCopied] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm<InvoiceFormInput, unknown, InvoiceFormOutput>({
+  const { register, control, handleSubmit, formState: { errors } } = useForm<InvoiceFormInput, unknown, InvoiceFormOutput>({
     resolver: zodResolver(editableInvoiceSchema),
     defaultValues: {
       invoiceDate: initialValues.invoiceDate,
@@ -36,9 +36,11 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
       supplierAddress: initialValues.supplierAddress,
       invoiceNumber: initialValues.invoiceNumber,
       description: initialValues.description,
+      items: initialValues.items.map(({ name, quantity, unit, unitPrice, lineTotal }) => ({ name, quantity, unit, unitPrice, lineTotal })),
       total: initialValues.total ?? '',
     },
   })
+  const { fields: itemFields, append, remove } = useFieldArray({ control, name: 'items' })
 
   const copy = handleSubmit(async (values) => {
     await copyInvoiceToClipboard({ ...values, total: values.total === '' ? null : Number(values.total) })
@@ -80,6 +82,62 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
             </label>
           )
         })}
+
+        <div className="sm:col-span-2">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="font-bold text-slate-900">Rincian Barang</h3>
+              <p className="mt-1 text-sm text-slate-500">Satu baris akan dibuat untuk setiap barang saat disalin ke Excel.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => append({ name: '', quantity: null, unit: null, unitPrice: null, lineTotal: null })}
+              className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700"
+            >
+              Tambah Barang
+            </button>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {itemFields.map((field, index) => {
+              const extractedItem = initialValues.items[index]
+              return (
+                <div key={field.id} className="rounded-xl border border-slate-200 p-4">
+                  <div className="grid gap-3 sm:grid-cols-12">
+                    <label className="sm:col-span-4">
+                      <span className="text-xs font-semibold text-slate-600">Nama barang</span>
+                      <input {...register(`items.${index}.name`)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+                    </label>
+                    <label className="sm:col-span-2">
+                      <span className="text-xs font-semibold text-slate-600">Jumlah</span>
+                      <input type="number" step="any" {...register(`items.${index}.quantity`)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+                    </label>
+                    <label className="sm:col-span-1">
+                      <span className="text-xs font-semibold text-slate-600">Satuan</span>
+                      <input {...register(`items.${index}.unit`)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+                    </label>
+                    <label className="sm:col-span-2">
+                      <span className="text-xs font-semibold text-slate-600">Harga satuan</span>
+                      <input type="number" {...register(`items.${index}.unitPrice`)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+                    </label>
+                    <label className="sm:col-span-2">
+                      <span className="text-xs font-semibold text-slate-600">Jumlah item</span>
+                      <input type="number" {...register(`items.${index}.lineTotal`)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+                    </label>
+                    <button type="button" onClick={() => remove(index)} className="self-end rounded-lg px-2 py-2 text-sm font-semibold text-red-600 sm:col-span-1">Hapus</button>
+                  </div>
+                  {extractedItem?.isCalculationValid === false && (
+                    <p className="mt-2 text-sm font-medium text-amber-700">
+                      Perhitungan AI: {extractedItem.quantity ?? 0} × {extractedItem.unitPrice ?? 0} = {extractedItem.calculatedLineTotal ?? 0}, berbeda dari jumlah tertulis.
+                    </p>
+                  )}
+                  {errors.items?.[index] && <p className="mt-2 text-sm text-red-600">Periksa kembali data barang ini.</p>}
+                </div>
+              )
+            })}
+            {itemFields.length === 0 && <p className="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">Belum ada barang yang terbaca.</p>}
+          </div>
+        </div>
 
         <div className="mt-3 flex flex-col gap-3 sm:col-span-2 sm:flex-row">
           <button className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white">Copy untuk Excel</button>

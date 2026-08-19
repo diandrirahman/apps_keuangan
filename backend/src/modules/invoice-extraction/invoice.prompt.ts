@@ -20,6 +20,10 @@ Aturan field lain:
 - invoiceNumber hanya diisi jika ada nilai tertulis di dekat label "Nota No.", "No. Faktur", atau "Invoice No.". Jika kolomnya kosong, gunakan null.
 - invoiceDate harus berupa YYYY-MM-DD. Jika tanggal lengkap tidak terbaca, gunakan null.
 - description adalah ringkasan nama barang yang terlihat pada tabel.
+- items harus berisi satu objek untuk setiap baris barang. Pisahkan nama barang, jumlah/kuantitas, satuan, harga satuan, dan jumlah baris.
+- quantity adalah angka jumlah barang; unit adalah satuan seperti bks, pcs, kg, liter, dus, atau unit yang benar-benar tertulis.
+- unitPrice adalah harga untuk satu satuan. lineTotal adalah jumlah yang tertulis untuk baris tersebut, bukan hasil tebakan.
+- Jangan diam-diam memperbaiki perhitungan faktur. Salin angka yang tertulis; backend akan membandingkan quantity x unitPrice dengan lineTotal.
 - total adalah nilai akhir di dekat "Jumlah Rp" atau "Total", berupa number bulat tanpa simbol mata uang dan pemisah ribuan.
 - evidence harus berupa kutipan persis yang ada dalam transcription. Jangan mengarang teks.
 - Jika ada lebih dari satu faktur/struk, tetap isi documentCount dengan jumlah yang terlihat dan jangan mencampurkan datanya.
@@ -39,6 +43,29 @@ Kembalikan JSON valid tanpa markdown dengan struktur persis berikut:
   "invoiceNumberEvidence": ["kutipan label dan nilainya"],
   "description": "ringkasan barang atau null",
   "descriptionEvidence": ["kutipan nama barang"],
+  "items": [
+    {
+      "name": "nama barang",
+      "quantity": 0,
+      "unit": "satuan atau null",
+      "unitPrice": 0,
+      "lineTotal": 0,
+      "evidence": {
+        "name": ["kutipan nama barang"],
+        "quantity": ["kutipan jumlah barang"],
+        "unit": ["kutipan satuan"],
+        "unitPrice": ["kutipan harga satuan"],
+        "lineTotal": ["kutipan jumlah baris"]
+      },
+      "confidence": {
+        "name": 0.0,
+        "quantity": 0.0,
+        "unit": 0.0,
+        "unitPrice": 0.0,
+        "lineTotal": 0.0
+      }
+    }
+  ],
   "total": 0,
   "totalEvidence": ["kutipan jumlah akhir"],
   "confidence": {

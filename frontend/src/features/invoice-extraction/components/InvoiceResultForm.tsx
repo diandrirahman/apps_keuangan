@@ -64,12 +64,16 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
       <form onSubmit={copy} className="mt-8 grid gap-5 sm:grid-cols-2">
         {fields.map(([name, label, type]) => {
           const confidence = initialValues.confidence[name as ConfidenceKey]
+          const initialValue = initialValues[name]
+          const confidenceText = (initialValue === null || initialValue === '') && confidence >= 0.7
+            ? 'Tidak tercantum'
+            : `${confidenceLabel(confidence)} · ${Math.round(confidence * 100)}%`
           return (
             <label key={name} className={name === 'description' ? 'sm:col-span-2' : ''}>
               <span className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-700">
                 <span>{label}</span>
                 <span className={confidence < 0.7 ? 'text-amber-700' : 'text-slate-500'}>
-                  {confidenceLabel(confidence)} · {Math.round(confidence * 100)}%
+                  {confidenceText}
                 </span>
               </span>
               <input

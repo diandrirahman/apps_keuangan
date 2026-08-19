@@ -23,7 +23,8 @@ function hasTextEvidence(value: string | null, evidence: string[], transcription
 
   const normalizedValue = normalizeEvidence(value)
   const normalizedTranscript = normalizeEvidence(transcription.join(' '))
-  const evidenceContainsValue = evidence.some((item) => normalizeEvidence(item).includes(normalizedValue))
+  const normalizedCombinedEvidence = normalizeEvidence(evidence.join(' '))
+  const evidenceContainsValue = normalizedCombinedEvidence.includes(normalizedValue)
   const evidenceExistsInTranscript = evidence.every((item) => normalizedTranscript.includes(normalizeEvidence(item)))
 
   return normalizedValue.length > 0 && evidenceContainsValue && evidenceExistsInTranscript
@@ -167,7 +168,14 @@ export class InvoiceService {
       description: items.length > 0 ? items.map((item) => item.name).join(', ') : descriptionIsValid ? extracted.description : null,
       items,
       total: totalIsValid ? extracted.total : null,
-      confidence: extracted.confidence,
+      confidence: {
+        invoiceDate: extracted.invoiceDate === null || invoiceDateIsValid ? extracted.confidence.invoiceDate : 0,
+        supplierName: supplierIsValid ? extracted.confidence.supplierName : 0,
+        supplierAddress: extracted.supplierAddress === null || supplierAddressIsValid ? extracted.confidence.supplierAddress : 0,
+        invoiceNumber: invoiceNumberIsValid ? extracted.confidence.invoiceNumber : 0,
+        description: items.length > 0 || descriptionIsValid ? extracted.confidence.description : 0,
+        total: totalIsValid ? extracted.confidence.total : 0,
+      },
       reviewRequired: warnings.length > 0,
       warnings,
     })

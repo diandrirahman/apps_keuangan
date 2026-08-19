@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { editableInvoiceSchema } from '../schemas/invoice.schema'
 import type { InvoiceExtractionResponse } from '../types/invoice.types'
@@ -16,13 +16,24 @@ const fields = [
   ['supplierName', 'Nama Supplier', 'text'],
   ['supplierAddress', 'Alamat Toko', 'text'],
   ['invoiceNumber', 'Nomor Faktur', 'text'],
-  ['total', 'Total', 'number'],
+  ['total', 'Total', 'currency'],
 ] as const
 
 function confidenceLabel(confidence: number): string {
   if (confidence >= 0.9) return 'Sangat yakin'
   if (confidence >= 0.7) return 'Cukup yakin'
   return 'Perlu diperiksa'
+}
+
+function formatRupiah(value: unknown): string {
+  if (value === null || value === '' || value === undefined) return ''
+  const number = Number(value)
+  return Number.isFinite(number) ? new Intl.NumberFormat('id-ID').format(number) : ''
+}
+
+function parseRupiah(value: string): number | null {
+  const digits = value.replace(/\D/g, '')
+  return digits ? Number(digits) : null
 }
 
 export function InvoiceResultForm({ initialValues, onReset }: Props) {
@@ -75,11 +86,30 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
                   {confidenceText}
                 </span>
               </span>
-              <input
-                type={type}
-                {...register(name)}
-                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-teal-700"
-              />
+              {type === 'currency' ? (
+                <div className="mt-2 flex overflow-hidden rounded-lg border border-slate-300 focus-within:border-teal-700">
+                  <span className="bg-slate-50 px-3 py-2.5 text-slate-500">Rp</span>
+                  <Controller
+                    control={control}
+                    name={name}
+                    render={({ field }) => (
+                      <input
+                        inputMode="numeric"
+                        value={formatRupiah(field.value)}
+                        onBlur={field.onBlur}
+                        onChange={(event) => field.onChange(parseRupiah(event.target.value) ?? '')}
+                        className="w-full px-3 py-2.5 outline-none"
+                      />
+                    )}
+                  />
+                </div>
+              ) : (
+                <input
+                  type={type}
+                  {...register(name)}
+                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-teal-700"
+                />
+              )}
               {name === 'supplierAddress' && <span className="mt-1 block text-xs text-slate-500">Alamat membantu verifikasi toko dan tidak disalin ke Excel.</span>}
               {errors[name] && <span className="mt-1 block text-sm text-red-600">{errors[name]?.message as string}</span>}
             </label>
@@ -132,17 +162,47 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
                     </label>
                     <label className="sm:col-span-2">
                       <span className="text-xs font-semibold text-slate-600">Harga satuan</span>
-                      <input type="number" {...register(`items.${index}.unitPrice`)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+                      <div className="mt-1 flex overflow-hidden rounded-lg border border-slate-300 focus-within:border-teal-700">
+                        <span className="bg-slate-50 px-2 py-2 text-sm text-slate-500">Rp</span>
+                        <Controller
+                          control={control}
+                          name={`items.${index}.unitPrice`}
+                          render={({ field: priceField }) => (
+                            <input
+                              inputMode="numeric"
+                              value={formatRupiah(priceField.value)}
+                              onBlur={priceField.onBlur}
+                              onChange={(event) => priceField.onChange(parseRupiah(event.target.value))}
+                              className="min-w-0 w-full px-2 py-2 outline-none"
+                            />
+                          )}
+                        />
+                      </div>
                     </label>
                     <label className="sm:col-span-2">
                       <span className="text-xs font-semibold text-slate-600">Jumlah item</span>
-                      <input type="number" {...register(`items.${index}.lineTotal`)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+                      <div className="mt-1 flex overflow-hidden rounded-lg border border-slate-300 focus-within:border-teal-700">
+                        <span className="bg-slate-50 px-2 py-2 text-sm text-slate-500">Rp</span>
+                        <Controller
+                          control={control}
+                          name={`items.${index}.lineTotal`}
+                          render={({ field: totalField }) => (
+                            <input
+                              inputMode="numeric"
+                              value={formatRupiah(totalField.value)}
+                              onBlur={totalField.onBlur}
+                              onChange={(event) => totalField.onChange(parseRupiah(event.target.value))}
+                              className="min-w-0 w-full px-2 py-2 outline-none"
+                            />
+                          )}
+                        />
+                      </div>
                     </label>
                     <button type="button" onClick={() => remove(index)} className="self-end rounded-lg px-2 py-2 text-sm font-semibold text-red-600 sm:col-span-1">Hapus</button>
                   </div>
                   {extractedItem?.isCalculationValid === false && (
                     <p className="mt-2 text-sm font-medium text-amber-700">
-                      Perhitungan AI: {extractedItem.quantity ?? 0} × {extractedItem.unitPrice ?? 0} = {extractedItem.calculatedLineTotal ?? 0}, berbeda dari jumlah tertulis.
+                      Perhitungan AI: {extractedItem.quantity ?? 0} × Rp {formatRupiah(extractedItem.unitPrice)} = Rp {formatRupiah(extractedItem.calculatedLineTotal)}, berbeda dari jumlah tertulis.
                     </p>
                   )}
                   {errors.items?.[index] && <p className="mt-2 text-sm text-red-600">Periksa kembali data barang ini.</p>}

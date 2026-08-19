@@ -6,6 +6,11 @@ export async function extractInvoice(imageFile: File): Promise<InvoiceExtraction
   body.append('image', imageFile)
   const response = await fetch('/api/invoices/extract', { method: 'POST', body })
   const payload: unknown = await response.json()
-  if (!response.ok) throw new Error('Faktur belum berhasil diproses. Pastikan gambar terlihat jelas lalu coba kembali.')
+  if (!response.ok) {
+    const message = typeof payload === 'object' && payload !== null && 'message' in payload && typeof payload.message === 'string'
+      ? payload.message
+      : 'Faktur belum berhasil diproses. Pastikan gambar terlihat jelas lalu coba kembali.'
+    throw new Error(message)
+  }
   return invoiceSchema.parse(payload)
 }

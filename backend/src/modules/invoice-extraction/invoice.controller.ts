@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import { InvoiceService } from './invoice.service.js'
+import { InvoiceService, MultipleInvoicesError } from './invoice.service.js'
 
 export class InvoiceController {
   constructor(private readonly invoiceService = new InvoiceService()) {}
@@ -11,6 +11,10 @@ export class InvoiceController {
       response.json(invoice)
     } catch (error) {
       console.error('Invoice extraction failed', error)
+      if (error instanceof MultipleInvoicesError) {
+        response.status(422).json({ message: error.message })
+        return
+      }
       response.status(502).json({ message: 'Faktur belum berhasil diproses. Silakan coba kembali.' })
     }
   }

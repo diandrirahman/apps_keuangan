@@ -97,13 +97,13 @@ export function InvoiceResultForm({ initialValues, defaultValues, mode = 'single
           <div className="mt-2 grid gap-3 sm:grid-cols-2">
             <label className="cursor-pointer">
               <input type="radio" value="expense" {...register('transactionType')} className="peer sr-only" />
-              <span className="block rounded-xl border border-slate-300 px-4 py-3 text-center font-semibold text-slate-700 transition peer-checked:border-teal-700 peer-checked:bg-teal-50 peer-checked:text-teal-800">
+              <span className="block rounded-xl border border-slate-300 px-4 py-3 text-center font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-300 hover:bg-slate-50 peer-checked:border-teal-700 peer-checked:bg-teal-50 peer-checked:text-teal-800 peer-checked:hover:bg-teal-100">
                 Uang Keluar
               </span>
             </label>
             <label className="cursor-pointer">
               <input type="radio" value="income" {...register('transactionType')} className="peer sr-only" />
-              <span className="block rounded-xl border border-slate-300 px-4 py-3 text-center font-semibold text-slate-700 transition peer-checked:border-teal-700 peer-checked:bg-teal-50 peer-checked:text-teal-800">
+              <span className="block rounded-xl border border-slate-300 px-4 py-3 text-center font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-300 hover:bg-slate-50 peer-checked:border-teal-700 peer-checked:bg-teal-50 peer-checked:text-teal-800 peer-checked:hover:bg-teal-100">
                 Uang Masuk
               </span>
             </label>
@@ -163,7 +163,7 @@ export function InvoiceResultForm({ initialValues, defaultValues, mode = 'single
             <button
               type="button"
               onClick={() => append({ name: '', quantity: null, unit: null, unitPrice: null, lineTotal: null })}
-              className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700"
+              className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800"
             >
               Tambah Barang
             </button>
@@ -238,7 +238,7 @@ export function InvoiceResultForm({ initialValues, defaultValues, mode = 'single
                         />
                       </div>
                     </label>
-                    <button type="button" onClick={() => remove(index)} className="self-end rounded-lg px-2 py-2 text-sm font-semibold text-red-600 sm:col-span-1">Hapus</button>
+                    <button type="button" onClick={() => remove(index)} className="self-end rounded-lg px-2 py-2 text-sm font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50 hover:text-red-700 sm:col-span-1">Hapus</button>
                   </div>
                   {extractedItem?.isCalculationValid === false && (
                     <p className="mt-2 text-sm font-medium text-amber-700">
@@ -254,8 +254,8 @@ export function InvoiceResultForm({ initialValues, defaultValues, mode = 'single
         </div>
 
         <div className="mt-3 flex flex-col gap-3 sm:col-span-2 sm:flex-row">
-          <button className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white">{mode === 'batch' ? 'Simpan dan Lanjut' : 'Copy untuk Excel'}</button>
-          {mode === 'single' && onReset && <button type="button" onClick={onReset} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700">Proses Faktur Lain</button>}
+          <button className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white transition-colors duration-200 hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">{mode === 'batch' ? 'Simpan dan Lanjut' : 'Copy untuk Excel'}</button>
+          {mode === 'single' && onReset && <button type="button" onClick={onReset} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800">Proses Faktur Lain</button>}
         </div>
         {copied && <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 sm:col-span-2">✓ Data berhasil dicopy</p>}
       </form>

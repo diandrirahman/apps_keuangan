@@ -62,8 +62,8 @@ export function InvoiceBatchWorkspace({ items, activeItem, counts, isProcessing,
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <button type="button" onClick={copyAll} disabled={!canCopyAll} className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">Copy Semua untuk Excel</button>
-          <button type="button" onClick={onReset} disabled={isProcessing} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 disabled:opacity-50">Mulai Antrean Baru</button>
+          <button type="button" onClick={copyAll} disabled={!canCopyAll} className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white transition-colors duration-200 hover:bg-teal-800 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-slate-300">Copy Semua untuk Excel</button>
+          <button type="button" onClick={onReset} disabled={isProcessing} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800 disabled:pointer-events-none disabled:opacity-50">Mulai Antrean Baru</button>
         </div>
       </div>
       {!canCopyAll && !isProcessing && <p className="mt-3 text-sm text-slate-500">Periksa seluruh hasil dan selesaikan faktur yang gagal sebelum menyalin data.</p>}
@@ -78,7 +78,7 @@ export function InvoiceBatchWorkspace({ items, activeItem, counts, isProcessing,
             key={item.id}
             type="button"
             onClick={() => onSelect(item.id)}
-            className={`min-w-52 rounded-xl border p-3 text-left transition lg:w-full ${activeItem?.id === item.id ? 'border-teal-700 bg-teal-50' : 'border-slate-200 bg-white'}`}
+            className={`min-w-52 rounded-xl border p-3 text-left transition-colors duration-200 lg:w-full ${activeItem?.id === item.id ? 'border-teal-700 bg-teal-50 hover:bg-teal-100' : 'border-slate-200 bg-white hover:border-teal-300 hover:bg-teal-50'}`}
           >
             <div className="flex items-start gap-3">
               <img src={item.previewUrl} alt="" className="h-14 w-12 rounded-md bg-slate-100 object-cover" />
@@ -108,8 +108,8 @@ export function InvoiceBatchWorkspace({ items, activeItem, counts, isProcessing,
           <h3 className="mt-6 text-xl font-bold">Faktur belum berhasil diproses</h3>
           <p className="mt-2 text-slate-600">{activeItem.errorMessage}</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => onRetry(activeItem.id)} className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white">Coba Lagi</button>
-            <button type="button" onClick={() => onRemove(activeItem.id)} className="rounded-xl border border-red-200 px-5 py-3 font-semibold text-red-600">Hapus dari Antrean</button>
+            <button type="button" onClick={() => onRetry(activeItem.id)} className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white transition-colors duration-200 hover:bg-teal-800">Coba Lagi</button>
+            <button type="button" onClick={() => onRemove(activeItem.id)} className="rounded-xl border border-red-200 px-5 py-3 font-semibold text-red-600 transition-colors duration-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700">Hapus dari Antrean</button>
           </div>
         </div>}
 

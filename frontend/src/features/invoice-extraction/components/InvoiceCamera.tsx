@@ -42,9 +42,9 @@ export function InvoiceCamera({ onCapture, onClose }: Props) {
 
   return <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4">
     <section className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
-      <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Ambil Foto Faktur</h2><button onClick={onClose} className="rounded-lg px-3 py-1 text-slate-600">Tutup</button></div>
+      <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Ambil Foto Faktur</h2><button onClick={onClose} className="rounded-lg px-3 py-1 text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900">Tutup</button></div>
       {error ? <p className="mt-6 rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</p> : <div className="relative mt-5 overflow-hidden rounded-xl bg-slate-900"><video ref={videoRef} autoPlay playsInline className="aspect-3/4 w-full object-cover" /><div className="pointer-events-none absolute inset-5 rounded-lg border-2 border-dashed border-white/80" /><p className="pointer-events-none absolute inset-x-8 bottom-8 rounded-lg bg-slate-950/70 px-3 py-2 text-center text-xs text-white">Sejajarkan seluruh tepi faktur di dalam bingkai dan tahan kamera hingga tulisan tajam.</p></div>}
-      <div className="mt-5 grid grid-cols-2 gap-3"><button onClick={onClose} className="rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700">Batal</button><button disabled={Boolean(error)} onClick={capture} className="rounded-xl bg-teal-700 px-4 py-3 font-semibold text-white disabled:opacity-50">Ambil Foto</button></div>
+      <div className="mt-5 grid grid-cols-2 gap-3"><button onClick={onClose} className="rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800">Batal</button><button disabled={Boolean(error)} onClick={capture} className="rounded-xl bg-teal-700 px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-teal-800 disabled:pointer-events-none disabled:opacity-50">Ambil Foto</button></div>
     </section>
   </div>
 }

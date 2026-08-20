@@ -35,7 +35,7 @@ export function InvoiceBatchSelection({ items, activeId, message, onSelect, onAd
           key={item.id}
           type="button"
           onClick={() => onSelect(item.id)}
-          className={`min-w-44 rounded-xl border p-2 text-left transition lg:w-full ${item.id === activeItem.id ? 'border-teal-700 bg-teal-50' : 'border-slate-200'}`}
+          className={`min-w-44 rounded-xl border p-2 text-left transition-colors duration-200 lg:w-full ${item.id === activeItem.id ? 'border-teal-700 bg-teal-50 hover:bg-teal-100' : 'border-slate-200 hover:border-teal-300 hover:bg-teal-50'}`}
         >
           <img src={item.previewUrl} alt={`Faktur ${index + 1}`} className="h-24 w-full rounded-lg bg-slate-100 object-cover" />
           <p className="mt-2 truncate text-sm font-semibold text-slate-800">Faktur {index + 1}</p>
@@ -48,18 +48,18 @@ export function InvoiceBatchSelection({ items, activeId, message, onSelect, onAd
         {activeItem.qualityWarning && <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">{activeItem.qualityWarning}</p>}
         <p className="mt-3 truncate text-sm text-slate-500">{activeItem.file.name}</p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <button type="button" onClick={() => replaceInput.current?.click()} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Ganti Foto</button>
-          <button type="button" onClick={() => onRemove(activeItem.id)} className="rounded-lg px-4 py-2 text-sm font-semibold text-red-600">Hapus</button>
+          <button type="button" onClick={() => replaceInput.current?.click()} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800">Ganti Foto</button>
+          <button type="button" onClick={() => onRemove(activeItem.id)} className="rounded-lg px-4 py-2 text-sm font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50 hover:text-red-700">Hapus</button>
         </div>
       </div>
     </div>
 
     <div className="mt-7 flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between">
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button type="button" onClick={() => addInput.current?.click()} disabled={items.length >= 10} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50">Tambah Gambar</button>
-        <button type="button" onClick={onOpenCamera} disabled={items.length >= 10} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50">Tambah via Kamera</button>
+        <button type="button" onClick={() => addInput.current?.click()} disabled={items.length >= 10} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50">Tambah Gambar</button>
+        <button type="button" onClick={onOpenCamera} disabled={items.length >= 10} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50">Tambah via Kamera</button>
       </div>
-      <button type="button" onClick={onProcess} className="rounded-xl bg-teal-700 px-6 py-3 font-semibold text-white">Proses Semua Faktur</button>
+      <button type="button" onClick={onProcess} className="rounded-xl bg-teal-700 px-6 py-3 font-semibold text-white transition-colors duration-200 hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">Proses Semua Faktur</button>
     </div>
     <input ref={addInput} className="hidden" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { const files = Array.from(event.target.files ?? []); if (files.length > 0) onAdd(files); event.target.value = '' }} />
     <input ref={replaceInput} className="hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) onReplace(activeItem.id, file); event.target.value = '' }} />

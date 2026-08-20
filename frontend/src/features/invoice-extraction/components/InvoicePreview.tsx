@@ -24,11 +24,11 @@ export function InvoicePreview({ file, previewUrl, qualityWarning, message, onCh
       {message && <p className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">{message}</p>}
       <p className="mt-3 truncate text-sm text-slate-500">{file.name}</p>
       <div className="mt-8 grid gap-3">
-        <button onClick={onProcess} className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white">Proses Faktur</button>
-        <button onClick={() => input.current?.click()} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700">Ganti Foto</button>
+        <button onClick={onProcess} className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white transition-colors duration-200 hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">Proses Faktur</button>
+        <button onClick={() => input.current?.click()} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">Ganti Foto</button>
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => addInput.current?.click()} className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700">Tambah Gambar</button>
-          <button onClick={onOpenCamera} className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700">Tambah via Kamera</button>
+          <button onClick={() => addInput.current?.click()} className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800">Tambah Gambar</button>
+          <button onClick={onOpenCamera} className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800">Tambah via Kamera</button>
         </div>
       </div>
       <input ref={input} className="hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const next = event.target.files?.[0]; if (next) onChange(next); event.target.value = '' }} />

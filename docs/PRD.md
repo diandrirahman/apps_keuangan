@@ -1,16 +1,16 @@
 # PRD — Prototype Foto Faktur ke Excel
 
-**Version:** 0.1
-**Status:** Draft
+**Version:** 0.2
+**Status:** Implemented Prototype
 **Stage:** Prototype
-**Current Work:** UI/UX Design di Figma
+**Current Work:** Frontend and AI extraction validation
 **QA:** Manual oleh Project Owner
 
 ---
 
 # 1. Product Overview
 
-Prototype ini membantu pengguna mengubah foto atau gambar faktur menjadi data terstruktur menggunakan AI.
+Prototype ini membantu pengguna mengubah satu atau beberapa foto faktur menjadi data terstruktur menggunakan AI.
 
 Data hasil pembacaan AI akan ditampilkan dalam form yang dapat diperiksa dan diedit oleh pengguna.
 
@@ -46,7 +46,7 @@ Masalah dari proses tersebut:
 * Pencatatan terasa merepotkan.
 * Pencatatan berpotensi tidak dilakukan secara rutin.
 
-Prototype ingin menguji proses yang lebih sederhana:
+Prototype ingin menguji proses yang lebih sederhana, baik untuk satu faktur maupun antrean maksimal 10 faktur:
 
 ```text
 Foto Faktur
@@ -94,25 +94,25 @@ Prototype akan diuji menggunakan faktur nyata dari pengguna.
 ```text
 Buka Prototype
       ↓
-Foto / Upload Faktur
+Foto / pilih 1-10 gambar faktur
       ↓
-Preview Faktur
+Preview dan atur antrean
       ↓
-Klik "Proses Faktur"
+Klik "Proses Faktur" atau "Proses Semua Faktur"
       ↓
-AI Memproses Gambar
+AI memproses setiap gambar satu per satu
       ↓
-Hasil Pembacaan Ditampilkan
+Hasil setiap faktur ditampilkan
       ↓
-Pengguna Memeriksa Data
+Pengguna memeriksa dan menyimpan setiap hasil
       ↓
 Pengguna Mengedit Jika Diperlukan
       ↓
-Klik "Copy untuk Excel"
+Klik "Copy untuk Excel" atau "Copy Semua untuk Excel"
       ↓
 Paste ke Excel
       ↓
-Proses Faktur Berikutnya
+Proses faktur atau antrean berikutnya
 ```
 
 Flow tersebut merupakan flow utama prototype.
@@ -136,7 +136,12 @@ Prototype harus memiliki:
 * Validasi data dasar.
 * Copy hasil untuk Excel.
 * Feedback setelah copy berhasil.
-* Reset untuk faktur berikutnya.
+* Reset untuk faktur atau antrean berikutnya.
+* Memilih maksimal 10 foto faktur dalam satu antrean.
+* Memproses antrean satu per satu.
+* Meninjau hasil setiap faktur sebelum seluruh data dicopy.
+* Memilih jenis transaksi uang masuk atau uang keluar pada setiap faktur.
+* Menampilkan rincian barang, jumlah, satuan, harga satuan, dan jumlah item.
 * Error state.
 * Responsive mobile.
 * Responsive desktop.
@@ -155,7 +160,7 @@ Prototype tidak memiliki:
 * Riwayat faktur.
 * Dashboard.
 * Laporan keuangan.
-* Pencatatan pemasukan/pengeluaran.
+* Penyimpanan atau pencatatan permanen pemasukan/pengeluaran.
 * Manajemen stok.
 * User management.
 * Business management.
@@ -181,12 +186,11 @@ AI hanya perlu mencoba mengambil informasi berikut:
 | Tanggal       | Ya       | Tanggal faktur              |
 | Nama Supplier | Ya       | Nama toko atau supplier     |
 | Nomor Faktur  | Tidak    | Nomor faktur jika tersedia  |
-| Keterangan    | Ya       | Deskripsi singkat transaksi |
+| Alamat Toko   | Tidak    | Alamat supplier jika terlihat |
 | Total         | Ya       | Total nominal faktur        |
+| Rincian Barang | Ya      | Nama, jumlah, satuan, harga satuan, dan jumlah item |
 
-Detail setiap item dalam faktur **belum diperlukan pada prototype ini**.
-
-Jika pada user testing ternyata detail item benar-benar dibutuhkan, kebutuhan tersebut dibahas setelah prototype selesai.
+Keterangan dapat digunakan sebagai data bantu pembacaan, tetapi tidak ditampilkan sebagai field edit dan tidak disalin ke Excel. Total dan alamat toko ditampilkan untuk verifikasi, tetapi tidak disalin ke Excel.
 
 ---
 
@@ -238,7 +242,7 @@ AI harus mengikuti aturan:
 
 ## FR-01 — Upload Faktur
 
-Pengguna dapat memilih gambar faktur dari perangkat.
+Pengguna dapat memilih satu atau beberapa gambar faktur dari perangkat. Satu gambar hanya boleh berisi satu faktur dan satu antrean maksimal berisi 10 gambar.
 
 Format:
 
@@ -321,11 +325,11 @@ Nama Supplier
 Nomor Faktur
 [INV-0012]
 
-Keterangan
-[Pembelian barang]
-
 Total
 [1.250.000]
+
+Rincian Barang
+[Nama] [Jumlah] [Satuan] [Harga Satuan] [Jumlah Item]
 ```
 
 ---
@@ -365,19 +369,21 @@ Pengguna dapat menekan:
 Copy untuk Excel
 ```
 
-Data disalin menggunakan format **Tab-Separated Values (TSV)**.
+Data disalin menggunakan format **Tab-Separated Values (TSV)**. Untuk setiap barang dibuat satu baris dengan urutan kolom:
+
+```text
+Tanggal	Jenis Transaksi	Supplier	Nomor Faktur	Nama Barang	Jumlah	Satuan	Harga Satuan	Jumlah Item
+```
+
+Total faktur, keterangan, dan alamat toko tidak disalin ke Excel.
 
 Contoh:
 
 ```text
-16/08/2026	Toko Maju Jaya	INV-0012	Pembelian barang	1250000
+2026-08-16	Uang Keluar	Toko Maju Jaya	INV-0012	Keripik Kentang	2	bks	10000	20000
 ```
 
-Ketika dipaste ke Excel:
-
-| Tanggal    | Supplier       | Nomor Faktur | Keterangan       |   Total |
-| ---------- | -------------- | ------------ | ---------------- | ------: |
-| 16/08/2026 | Toko Maju Jaya | INV-0012     | Pembelian barang | 1250000 |
+Ketika dipaste ke Excel, setiap barang menjadi satu baris. Faktur dengan beberapa barang mengulang tanggal, jenis transaksi, supplier, dan nomor faktur pada setiap baris.
 
 ---
 
@@ -395,7 +401,7 @@ Tidak perlu halaman baru.
 
 ---
 
-## FR-10 — Proses Faktur Lain
+## FR-10 — Proses Faktur atau Antrean Lain
 
 Pengguna dapat memilih:
 
@@ -403,7 +409,7 @@ Pengguna dapat memilih:
 Proses Faktur Lain
 ```
 
-State sebelumnya dihapus dan aplikasi kembali ke kondisi awal.
+State sebelumnya dihapus dan aplikasi kembali ke kondisi awal. Pada mode batch, seluruh data hanya dapat dicopy setelah semua faktur berhasil diperiksa; faktur gagal harus dicoba ulang atau dihapus.
 
 ---
 
@@ -422,6 +428,23 @@ Pastikan gambar terlihat jelas lalu coba kembali.
 ```
 
 Technical error tidak boleh ditampilkan langsung kepada pengguna.
+
+Jika Gemini mengembalikan `429` karena batas request per menit:
+
+```text
+Menunggu kuota AI...
+
+Proses akan dilanjutkan otomatis dalam 30 detik.
+```
+
+Aturan Free Tier:
+
+* Awal setiap request AI diberi jarak minimal 6 detik.
+* Backend mengembalikan HTTP `429` dan `Retry-After`; backend tidak melakukan retry cepat untuk rate limit.
+* Frontend menghentikan sementara seluruh antrean sesuai `Retry-After`, lalu mencoba faktur yang sama satu kali secara otomatis.
+* Waktu tunggu dibatasi antara 5 sampai 60 detik, dengan fallback 30 detik.
+* Jika percobaan otomatis masih terkena rate limit, faktur ditandai gagal dan pengguna dapat mencoba lagi secara manual.
+* Retry backend hanya dilakukan satu kali untuk timeout, gangguan upstream, atau respons AI yang tidak valid, menggunakan exponential backoff dan jitter.
 
 ---
 
@@ -523,11 +546,11 @@ Nama Supplier
 Nomor Faktur
 [____________]
 
-Keterangan
-[____________]
-
 Total
 [____________]
+
+Rincian Barang
+[Nama] [Jumlah] [Satuan] [Harga Satuan] [Jumlah Item]
 
 [Copy untuk Excel]
 
@@ -655,7 +678,7 @@ API key tidak boleh diekspos ke frontend.
 
 # 16. Backend API
 
-Prototype hanya membutuhkan satu endpoint utama:
+Prototype hanya membutuhkan satu endpoint utama. Antrean batch dikelola frontend dan setiap request tetap mengirim satu gambar:
 
 ```http
 POST /api/invoices/extract
@@ -677,6 +700,15 @@ Response:
   "supplierName": "Toko Maju Jaya",
   "invoiceNumber": "INV-0012",
   "description": "Pembelian barang",
+  "items": [
+    {
+      "name": "Keripik Kentang",
+      "quantity": 2,
+      "unit": "bks",
+      "unitPrice": 10000,
+      "lineTotal": 20000
+    }
+  ],
   "total": 1250000
 }
 ```
@@ -694,7 +726,7 @@ Prototype tidak menyimpan secara permanen:
 * Data pengguna.
 * Riwayat pemrosesan.
 
-Data hanya digunakan selama proses request berlangsung.
+Data hanya digunakan selama proses request dan sesi halaman berlangsung. State antrean berada di memory browser dan hilang ketika halaman dimuat ulang.
 
 ---
 
@@ -864,7 +896,7 @@ frontend/
 │   │       │   └── InvoiceErrorState.tsx
 │   │       │
 │   │       ├── hooks/
-│   │       │   └── useInvoiceExtraction.ts
+│   │       │   └── useInvoiceBatch.ts
 │   │       │
 │   │       ├── schemas/
 │   │       │   └── invoice.schema.ts
@@ -1287,6 +1319,8 @@ Faktur belum berhasil diproses.
 Silakan coba kembali.
 ```
 
+Rate limit merupakan kondisi sementara, bukan kegagalan pembacaan faktur. Backend mengirim `429` dengan waktu tunggu, sedangkan frontend menampilkan countdown dan melanjutkan antrean secara otomatis. Throttle memory backend bersifat best-effort per server instance; penggunaan beberapa instance atau banyak pengguna tetap berbagi kuota Gemini pada level project.
+
 ---
 
 # 32. Scalability Definition
@@ -1449,14 +1483,7 @@ Pengerjaan dilakukan dengan urutan:
 10. User Testing
 ```
 
-Saat ini:
-
-```text
-CURRENT TASK:
-UI/UX Design di Figma
-```
-
-Implementasi frontend/backend belum dilakukan sampai desain selesai dan mendapat approval Project Owner.
+Saat ini implementasi prototype dan validasi menggunakan faktur nyata sedang berlangsung.
 
 ---
 
@@ -1686,22 +1713,13 @@ CURRENT STAGE:
 Prototype
 
 CURRENT TASK:
-Complete UI/UX design in Figma.
+Validate single and batch invoice processing.
 
 CURRENT PRIORITY:
-Validate the core user flow visually before implementation.
-
-DO NOT IMPLEMENT YET:
-- React frontend
-- Express backend
-- Gemini integration
-
-UNTIL:
-Project Owner explicitly approves the Figma design.
-
-AFTER FIGMA APPROVAL:
-Implement only the prototype defined in this PRD.
+Validate the core user flow and AI extraction with real invoices.
 ```
+
+React frontend, Express backend, dan Gemini integration telah diimplementasikan. Perubahan berikutnya tetap dibatasi pada prototype yang didefinisikan dalam PRD ini dan instruksi eksplisit Project Owner.
 
 ---
 

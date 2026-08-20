@@ -5,6 +5,7 @@ export function formatInvoiceForExcel(invoice: InvoiceFormData): string {
 
   return rows.map((item) => [
     invoice.invoiceDate ?? '',
+    invoice.transactionType === 'income' ? 'Uang Masuk' : 'Uang Keluar',
     invoice.supplierName ?? '',
     invoice.invoiceNumber ?? '',
     item.name,
@@ -15,6 +16,18 @@ export function formatInvoiceForExcel(invoice: InvoiceFormData): string {
   ].join('\t')).join('\n')
 }
 
+export function formatInvoicesForExcel(invoices: InvoiceFormData[]): string {
+  return invoices.map(formatInvoiceForExcel).filter(Boolean).join('\n')
+}
+
+export function countInvoiceRows(invoices: InvoiceFormData[]): number {
+  return invoices.reduce((total, invoice) => total + Math.max(invoice.items.length, 1), 0)
+}
+
 export async function copyInvoiceToClipboard(invoice: InvoiceFormData): Promise<void> {
   await navigator.clipboard.writeText(formatInvoiceForExcel(invoice))
+}
+
+export async function copyInvoicesToClipboard(invoices: InvoiceFormData[]): Promise<void> {
+  await navigator.clipboard.writeText(formatInvoicesForExcel(invoices))
 }

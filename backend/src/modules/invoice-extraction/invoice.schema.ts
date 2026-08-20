@@ -23,6 +23,9 @@ export const invoiceItemSchema = invoiceItemFieldsSchema.extend({
   calculatedLineTotal: z.number().nonnegative().nullable(),
   isCalculationValid: z.boolean().nullable(),
   confidence: invoiceItemConfidenceSchema,
+  needsReview: z.boolean(),
+  reviewNotes: z.array(z.string()),
+  nameAlternatives: z.array(z.string()),
 })
 
 export const invoiceFieldsSchema = z.object({
@@ -52,6 +55,12 @@ export const invoiceSchema = invoiceFieldsSchema.extend({
 const evidenceSchema = z.array(z.string().trim().min(1)).default([])
 
 const invoiceAiItemSchema = invoiceItemFieldsSchema.extend({
+  nameLegibility: z.enum(['clear', 'uncertain', 'unreadable']).default('uncertain'),
+  nameAlternatives: evidenceSchema,
+  nameReadings: z.array(z.object({
+    source: z.enum(['full', 'table_crop', 'other']),
+    value: z.string().trim().min(1).nullable(),
+  })).default([]),
   evidence: z.object({
     name: evidenceSchema,
     quantity: evidenceSchema,

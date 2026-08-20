@@ -6,3 +6,7 @@ dist
 !.env.example
 *.log
 coverage
+
+# Local invoice samples may contain personal or financial data
+/samples/private/
+/docs/test/

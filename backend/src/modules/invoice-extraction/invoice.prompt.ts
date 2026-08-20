@@ -1,5 +1,7 @@
 export const invoiceExtractionPrompt = `Anda adalah ekstraktor data faktur Indonesia. Analisis tata letak dan arti teks, bukan sekadar posisi katanya.
 
+Anda dapat menerima beberapa tampilan dan crop dari SATU foto faktur yang sama. Gunakan semuanya sebagai bukti pelengkap, jangan menghitungnya sebagai dokumen yang berbeda. documentCount harus dihitung berdasarkan dokumen unik pada foto penuh.
+
 Kerjakan dalam urutan berikut:
 1. Hitung jumlah faktur/struk yang berbeda pada gambar.
 2. Tentukan jenis dokumen.
@@ -23,6 +25,13 @@ Aturan field lain:
 - items harus berisi satu objek untuk setiap baris barang. Pisahkan nama barang, jumlah/kuantitas, satuan, harga satuan, dan jumlah baris.
 - quantity adalah angka jumlah barang; unit adalah satuan seperti bks, pcs, kg, liter, dus, atau unit yang benar-benar tertulis.
 - unitPrice adalah harga untuk satu satuan. lineTotal adalah jumlah yang tertulis untuk baris tersebut, bukan hasil tebakan.
+- Tulisan tangan dapat memakai pecahan seperti 1/2 atau 6 1/2. Pertahankan nilai pecahan sebagai number desimal hanya jika simbolnya benar-benar terlihat.
+- Gunakan hubungan quantity × unitPrice = lineTotal untuk memeriksa kandidat pembacaan angka, tetapi jangan mengarang nilai hanya agar perhitungannya cocok.
+- Bandingkan tampilan berwarna, hitam-putih, dan crop. Jika tetap ambigu, gunakan null dan confidence rendah.
+- Untuk setiap nama barang, baca secara terpisah dari tampilan penuh dan crop tabel, lalu tulis hasilnya pada nameReadings. Jangan menyalin satu tebakan ke kedua pembacaan jika hurufnya tidak jelas.
+- nameLegibility harus "clear" hanya jika bentuk semua huruf nama barang benar-benar terlihat. Gunakan "uncertain" jika ada huruf yang perlu ditafsirkan dan "unreadable" jika nama tidak dapat dibaca dengan layak.
+- Confidence nama mengukur keterbacaan tulisan, bukan keyakinan bahwa tebakan terdengar masuk akal. Perhitungan harga tidak membuktikan nama barang benar.
+- Isi nameAlternatives dengan kandidat pembacaan lain yang masuk akal. Jika ada kandidat alternatif, jangan memberi confidence nama 0.9 atau lebih.
 - Jangan diam-diam memperbaiki perhitungan faktur. Salin angka yang tertulis; backend akan membandingkan quantity x unitPrice dengan lineTotal.
 - total adalah nilai akhir di dekat "Jumlah Rp" atau "Total", berupa number bulat tanpa simbol mata uang dan pemisah ribuan.
 - evidence harus berupa kutipan persis yang ada dalam transcription. Jangan mengarang teks.
@@ -46,6 +55,12 @@ Kembalikan JSON valid tanpa markdown dengan struktur persis berikut:
   "items": [
     {
       "name": "nama barang",
+      "nameLegibility": "clear | uncertain | unreadable",
+      "nameAlternatives": ["kandidat nama lain jika ada"],
+      "nameReadings": [
+        { "source": "full", "value": "hasil baca dari tampilan penuh atau null" },
+        { "source": "table_crop", "value": "hasil baca dari crop tabel atau null" }
+      ],
       "quantity": 0,
       "unit": "satuan atau null",
       "unitPrice": 0,

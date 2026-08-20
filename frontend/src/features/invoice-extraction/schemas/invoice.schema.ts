@@ -18,6 +18,9 @@ const invoiceItemSchema = invoiceItemFieldsSchema.extend({
     unitPrice: z.number().min(0).max(1),
     lineTotal: z.number().min(0).max(1),
   }),
+  needsReview: z.boolean(),
+  reviewNotes: z.array(z.string()),
+  nameAlternatives: z.array(z.string()),
 })
 
 export const invoiceFieldsSchema = z.object({
@@ -46,10 +49,11 @@ export const invoiceSchema = invoiceFieldsSchema.extend({
 })
 
 export const editableInvoiceSchema = invoiceFieldsSchema.extend({
+  transactionType: z.enum(['income', 'expense']),
   invoiceDate: z.string().nullable(),
   supplierName: z.string().trim().nullable(),
   invoiceNumber: z.string().trim().nullable(),
   description: z.string().trim().nullable(),
   items: z.array(invoiceItemFieldsSchema),
-  total: z.union([z.coerce.number().nonnegative('Total harus berupa angka positif'), z.literal('')]),
+  total: z.union([z.coerce.number().nonnegative('Total harus berupa angka positif'), z.literal(''), z.null()]),
 })

@@ -1,13 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { editableInvoiceSchema } from '../schemas/invoice.schema'
-import type { InvoiceExtractionResponse } from '../types/invoice.types'
+import type { InvoiceExtractionResponse, InvoiceFormData, InvoiceFormInput } from '../types/invoice.types'
 import { copyInvoiceToClipboard } from '../utils/invoiceClipboard'
 
-type Props = { initialValues: InvoiceExtractionResponse; onReset: () => void }
-type InvoiceFormInput = z.input<typeof editableInvoiceSchema>
+type Props = {
+  initialValues: InvoiceExtractionResponse
+  defaultValues?: InvoiceFormInput | null
+  mode?: 'single' | 'batch'
+  onReset?: () => void
+  onSave?: (values: InvoiceFormData) => void
+  onDraftChange?: (values: InvoiceFormInput) => void
+}
 type InvoiceFormOutput = z.output<typeof editableInvoiceSchema>
 type ConfidenceKey = keyof InvoiceExtractionResponse['confidence']
 
@@ -36,24 +42,40 @@ function parseRupiah(value: string): number | null {
   return digits ? Number(digits) : null
 }
 
-export function InvoiceResultForm({ initialValues, onReset }: Props) {
+function createDefaultValues(initialValues: InvoiceExtractionResponse): InvoiceFormInput {
+  return {
+    transactionType: 'expense',
+    invoiceDate: initialValues.invoiceDate,
+    supplierName: initialValues.supplierName,
+    supplierAddress: initialValues.supplierAddress,
+    invoiceNumber: initialValues.invoiceNumber,
+    description: initialValues.description,
+    items: initialValues.items.map(({ name, quantity, unit, unitPrice, lineTotal }) => ({ name, quantity, unit, unitPrice, lineTotal })),
+    total: initialValues.total ?? '',
+  }
+}
+
+export function InvoiceResultForm({ initialValues, defaultValues, mode = 'single', onReset, onSave, onDraftChange }: Props) {
   const [copied, setCopied] = useState(false)
-  const { register, control, handleSubmit, formState: { errors } } = useForm<InvoiceFormInput, unknown, InvoiceFormOutput>({
+  const { register, control, handleSubmit, watch, formState: { errors } } = useForm<InvoiceFormInput, unknown, InvoiceFormOutput>({
     resolver: zodResolver(editableInvoiceSchema),
-    defaultValues: {
-      invoiceDate: initialValues.invoiceDate,
-      supplierName: initialValues.supplierName,
-      supplierAddress: initialValues.supplierAddress,
-      invoiceNumber: initialValues.invoiceNumber,
-      description: initialValues.description,
-      items: initialValues.items.map(({ name, quantity, unit, unitPrice, lineTotal }) => ({ name, quantity, unit, unitPrice, lineTotal })),
-      total: initialValues.total ?? '',
-    },
+    defaultValues: defaultValues ?? createDefaultValues(initialValues),
   })
   const { fields: itemFields, append, remove } = useFieldArray({ control, name: 'items' })
 
-  const copy = handleSubmit(async (values) => {
-    await copyInvoiceToClipboard({ ...values, total: values.total === '' ? null : Number(values.total) })
+  useEffect(() => {
+    if (!onDraftChange) return
+    const subscription = watch((values) => onDraftChange(values as InvoiceFormInput))
+    return () => subscription.unsubscribe()
+  }, [onDraftChange, watch])
+
+  const submit = handleSubmit(async (values) => {
+    const normalizedValues = { ...values, total: values.total === '' ? null : Number(values.total) }
+    if (mode === 'batch') {
+      onSave?.(normalizedValues)
+      return
+    }
+    await copyInvoiceToClipboard(normalizedValues)
     setCopied(true)
   })
 
@@ -64,20 +86,36 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
 
       {initialValues.reviewRequired && (
         <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
-          <p className="font-semibold">Beberapa data perlu diperiksa</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-            {initialValues.warnings.map((warning) => <li key={warning}>{warning}</li>)}
-          </ul>
+          <p className="font-semibold">Periksa kembali hasil pembacaan</p>
+          <p className="mt-1 text-sm">{initialValues.warnings[0]}</p>
         </div>
       )}
 
-      <form onSubmit={copy} className="mt-8 grid gap-5 sm:grid-cols-2">
+      <form onSubmit={submit} className="mt-8 grid gap-5 sm:grid-cols-2">
+        <fieldset className="sm:col-span-2">
+          <legend className="text-sm font-semibold text-slate-700">Jenis Transaksi</legend>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            <label className="cursor-pointer">
+              <input type="radio" value="expense" {...register('transactionType')} className="peer sr-only" />
+              <span className="block rounded-xl border border-slate-300 px-4 py-3 text-center font-semibold text-slate-700 transition peer-checked:border-teal-700 peer-checked:bg-teal-50 peer-checked:text-teal-800">
+                Uang Keluar
+              </span>
+            </label>
+            <label className="cursor-pointer">
+              <input type="radio" value="income" {...register('transactionType')} className="peer sr-only" />
+              <span className="block rounded-xl border border-slate-300 px-4 py-3 text-center font-semibold text-slate-700 transition peer-checked:border-teal-700 peer-checked:bg-teal-50 peer-checked:text-teal-800">
+                Uang Masuk
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
         {fields.map(([name, label, type]) => {
           const confidence = initialValues.confidence[name as ConfidenceKey]
           const initialValue = initialValues[name]
           const confidenceText = (initialValue === null || initialValue === '') && confidence >= 0.7
             ? 'Tidak tercantum'
-            : `${confidenceLabel(confidence)} · ${Math.round(confidence * 100)}%`
+            : confidenceLabel(confidence)
           return (
             <label key={name}>
               <span className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-700">
@@ -141,10 +179,12 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
                 <div key={field.id} className="rounded-xl border border-slate-200 p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <p className="text-sm font-semibold text-slate-700">Barang {index + 1}</p>
-                    <p className={`text-xs font-semibold ${itemConfidence !== null && itemConfidence < 0.7 ? 'text-amber-700' : 'text-slate-500'}`}>
+                    <p className={`text-xs font-semibold ${extractedItem?.needsReview || (itemConfidence !== null && itemConfidence < 0.7) ? 'text-amber-700' : 'text-slate-500'}`}>
                       {itemConfidence === null
                         ? 'Ditambahkan manual'
-                        : `Keyakinan AI: ${Math.round(itemConfidence * 100)}%`}
+                        : extractedItem?.needsReview
+                          ? 'Perlu diperiksa'
+                          : confidenceLabel(itemConfidence)}
                     </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-12">
@@ -214,8 +254,8 @@ export function InvoiceResultForm({ initialValues, onReset }: Props) {
         </div>
 
         <div className="mt-3 flex flex-col gap-3 sm:col-span-2 sm:flex-row">
-          <button className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white">Copy untuk Excel</button>
-          <button type="button" onClick={onReset} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700">Proses Faktur Lain</button>
+          <button className="rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white">{mode === 'batch' ? 'Simpan dan Lanjut' : 'Copy untuk Excel'}</button>
+          {mode === 'single' && onReset && <button type="button" onClick={onReset} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700">Proses Faktur Lain</button>}
         </div>
         {copied && <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 sm:col-span-2">✓ Data berhasil dicopy</p>}
       </form>

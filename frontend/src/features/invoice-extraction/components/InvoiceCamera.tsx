@@ -10,7 +10,14 @@ export function InvoiceCamera({ onCapture, onClose }: Props) {
   useEffect(() => {
     const startCamera = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1_920 },
+            height: { ideal: 2_560 },
+          },
+          audio: false,
+        })
         streamRef.current = stream
         if (videoRef.current) videoRef.current.srcObject = stream
       } catch {
@@ -30,13 +37,13 @@ export function InvoiceCamera({ onCapture, onClose }: Props) {
     canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height)
     canvas.toBlob((blob) => {
       if (blob) onCapture(new File([blob], `faktur-${Date.now()}.jpg`, { type: 'image/jpeg' }))
-    }, 'image/jpeg', 0.9)
+    }, 'image/jpeg', 0.95)
   }
 
   return <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4">
     <section className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
       <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Ambil Foto Faktur</h2><button onClick={onClose} className="rounded-lg px-3 py-1 text-slate-600">Tutup</button></div>
-      {error ? <p className="mt-6 rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</p> : <video ref={videoRef} autoPlay playsInline className="mt-5 aspect-3/4 w-full rounded-xl bg-slate-900 object-cover" />}
+      {error ? <p className="mt-6 rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</p> : <div className="relative mt-5 overflow-hidden rounded-xl bg-slate-900"><video ref={videoRef} autoPlay playsInline className="aspect-3/4 w-full object-cover" /><div className="pointer-events-none absolute inset-5 rounded-lg border-2 border-dashed border-white/80" /><p className="pointer-events-none absolute inset-x-8 bottom-8 rounded-lg bg-slate-950/70 px-3 py-2 text-center text-xs text-white">Sejajarkan seluruh tepi faktur di dalam bingkai dan tahan kamera hingga tulisan tajam.</p></div>}
       <div className="mt-5 grid grid-cols-2 gap-3"><button onClick={onClose} className="rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700">Batal</button><button disabled={Boolean(error)} onClick={capture} className="rounded-xl bg-teal-700 px-4 py-3 font-semibold text-white disabled:opacity-50">Ambil Foto</button></div>
     </section>
   </div>

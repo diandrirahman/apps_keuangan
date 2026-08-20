@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { InvoiceImageViewer } from './InvoiceImageViewer'
 
 type Props = {
   file: File
@@ -16,7 +17,7 @@ export function InvoicePreview({ file, previewUrl, qualityWarning, message, onCh
   const addInput = useRef<HTMLInputElement>(null)
 
   return <section className="mx-auto grid max-w-4xl gap-8 rounded-2xl bg-white p-6 shadow-sm sm:p-10 lg:grid-cols-2">
-    <div><img src={previewUrl} alt="Preview faktur" className="max-h-112 w-full rounded-xl border border-slate-200 object-contain" /></div>
+    <div><InvoiceImageViewer imageUrl={previewUrl} alt="Preview faktur" containerClassName="rounded-xl border border-slate-200" className="max-h-112 w-full object-contain" /></div>
     <div className="flex flex-col justify-center">
       <h2 className="text-2xl font-bold">Periksa Foto Faktur</h2>
       <p className="mt-3 leading-7 text-slate-600">Pastikan tulisan terlihat jelas dan seluruh faktur masuk ke dalam foto.</p>

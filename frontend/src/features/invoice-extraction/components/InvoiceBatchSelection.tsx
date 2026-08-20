@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import type { BatchInvoice } from '../types/invoice.types'
+import { InvoiceImageViewer } from './InvoiceImageViewer'
 
 type Props = {
   items: BatchInvoice[]
@@ -44,7 +45,7 @@ export function InvoiceBatchSelection({ items, activeId, message, onSelect, onAd
       </div>
 
       <div className="min-w-0">
-        <img src={activeItem.previewUrl} alt="Preview faktur aktif" className="max-h-112 w-full rounded-xl border border-slate-200 bg-slate-50 object-contain" />
+        <InvoiceImageViewer imageUrl={activeItem.previewUrl} alt="Preview faktur aktif" containerClassName="rounded-xl border border-slate-200 bg-slate-50" className="max-h-112 w-full object-contain" />
         {activeItem.qualityWarning && <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">{activeItem.qualityWarning}</p>}
         <p className="mt-3 truncate text-sm text-slate-500">{activeItem.file.name}</p>
         <div className="mt-4 flex flex-wrap gap-3">

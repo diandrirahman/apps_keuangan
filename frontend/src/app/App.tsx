@@ -3,6 +3,7 @@ import { InvoiceBatchSelection } from '../features/invoice-extraction/components
 import { InvoiceBatchWorkspace } from '../features/invoice-extraction/components/InvoiceBatchWorkspace'
 import { InvoiceCamera } from '../features/invoice-extraction/components/InvoiceCamera'
 import { InvoiceErrorState } from '../features/invoice-extraction/components/InvoiceErrorState'
+import { InvoiceImageViewer } from '../features/invoice-extraction/components/InvoiceImageViewer'
 import { InvoicePreview } from '../features/invoice-extraction/components/InvoicePreview'
 import { InvoiceProcessing } from '../features/invoice-extraction/components/InvoiceProcessing'
 import { InvoiceResultForm } from '../features/invoice-extraction/components/InvoiceResultForm'
@@ -51,15 +52,21 @@ export function App() {
 
         {singleItem && singleItem.status === 'error' && <InvoiceErrorState
           message={singleItem.errorMessage ?? ''}
+          previewUrl={singleItem.previewUrl}
           onRetry={() => batch.retryItem(singleItem.id)}
           onChange={batch.reset}
         />}
 
-        {singleItem?.result && (singleItem.status === 'review' || singleItem.status === 'reviewed') && <InvoiceResultForm
-          initialValues={singleItem.result}
-          defaultValues={singleItem.draft}
-          onReset={batch.reset}
-        />}
+        {singleItem?.result && (singleItem.status === 'review' || singleItem.status === 'reviewed') && <div className="mx-auto max-w-5xl space-y-5">
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <InvoiceImageViewer imageUrl={singleItem.previewUrl} alt="Faktur yang sedang diperiksa" containerClassName="mx-auto rounded-xl" className="mx-auto max-h-72 w-full object-contain" />
+          </div>
+          <InvoiceResultForm
+            initialValues={singleItem.result}
+            defaultValues={singleItem.draft}
+            onReset={batch.reset}
+          />
+        </div>}
 
         {batch.isBatchMode && batch.hasStarted && <InvoiceBatchWorkspace
           items={batch.items}

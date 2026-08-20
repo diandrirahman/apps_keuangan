@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { BatchInvoice, InvoiceFormData, InvoiceFormInput } from '../types/invoice.types'
 import { copyInvoicesToClipboard, countInvoiceRows } from '../utils/invoiceClipboard'
+import { InvoiceImageViewer } from './InvoiceImageViewer'
 import { InvoiceResultForm } from './InvoiceResultForm'
 
 type StatusCounts = {
@@ -104,7 +105,7 @@ export function InvoiceBatchWorkspace({ items, activeItem, counts, isProcessing,
         </div>}
 
         {!isProcessing && activeItem?.status === 'error' && <div className="rounded-2xl bg-white p-6 shadow-sm sm:p-10">
-          <img src={activeItem.previewUrl} alt="Faktur yang gagal diproses" className="mx-auto max-h-72 rounded-xl border border-slate-200 object-contain" />
+          <InvoiceImageViewer imageUrl={activeItem.previewUrl} alt="Faktur yang gagal diproses" containerClassName="mx-auto rounded-xl border border-slate-200" className="mx-auto max-h-72 w-full object-contain" />
           <h3 className="mt-6 text-xl font-bold">Faktur belum berhasil diproses</h3>
           <p className="mt-2 text-slate-600">{activeItem.errorMessage}</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -115,7 +116,7 @@ export function InvoiceBatchWorkspace({ items, activeItem, counts, isProcessing,
 
         {!isProcessing && activeItem?.result && (activeItem.status === 'review' || activeItem.status === 'reviewed') && <div className="space-y-5">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <img src={activeItem.previewUrl} alt="Faktur yang sedang diperiksa" className="mx-auto max-h-72 rounded-xl object-contain" />
+            <InvoiceImageViewer imageUrl={activeItem.previewUrl} alt="Faktur yang sedang diperiksa" containerClassName="mx-auto rounded-xl" className="mx-auto max-h-72 w-full object-contain" />
           </div>
           <InvoiceResultForm
             key={activeItem.id}
